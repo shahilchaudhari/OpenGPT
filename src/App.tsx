@@ -1,19 +1,39 @@
-
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import './App.css'
 import Ask from './components/Ask'
+import FaceOff from './components/FaceOff';
+import Math from './components/Math';
 
 function App() {
 
-  return (
-<div className="flex flex-col justify-center bg-gradient-to-b">
-  <h2 className="flex justify-center text-4xl font-extrabold text-gray-800 mb-8 mt-1 shadow-md p-4 rounded">
-    Ask Anything without worring of limit !!
-  </h2>
-  
-  <Ask />
-</div>
 
+
+  return (
+    <Router>
+    <div >
+      {/* Navigation Tabs */}
+      <nav className="flex flex-start text-[25px] xl ml-10 space-x-8 p-2.5 mb">
+        <Link to="/ask" className="text-blue-500 hover:underline hover:text-blue-700">
+          Ask
+        </Link>
+        <Link to="/FaceOff" className="text-blue-500 hover:underline">
+          FaceOff
+        </Link>
+        <Link to="/math" className="text-blue-500 hover:underline">
+          Math
+        </Link>
+      </nav>
+
+      {/* Routes */}
+      <Routes>
+        <Route path="/" element={<Ask/>} />
+        <Route path="/ask" element={<Ask/>} />
+        <Route path="/FaceOff" element={<FaceOff />} />
+        <Route path="/math" element={<Math />} />
+      </Routes>
+    </div>
+  </Router>
   )
-}
+};
 
 export default App
