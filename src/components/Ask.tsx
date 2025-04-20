@@ -243,7 +243,7 @@ const Ask = () => {
                                 return !inline ? (
                                     <div className="relative">
                                         <SyntaxHighlighter
-                                            style={materialLight as unknown as { [key: string]: React.CSSProperties }} // Fix for the style prop
+                                            style={materialLight as any }// Fix for the style prop
                                             language={match?.[1] || "text"}
                                             PreTag="div"
                                             {...props}
