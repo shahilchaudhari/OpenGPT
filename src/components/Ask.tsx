@@ -8,7 +8,7 @@ import { materialLight } from "react-syntax-highlighter/dist/esm/styles/prism"; 
 
 type ContentItem =
     | { type: "text"; text: string }
-    | { type: "image_url"; image_url: { url: string } };
+    // | { type: "image_url"; image_url: { url: string } };
 
 type HistoryItem = {
     question: string;
@@ -237,7 +237,7 @@ const Ask = () => {
                                 className,
                                 children,
                                 ...props
-                            }: React.HTMLAttributes<HTMLElement> & { inline?: boolean; children: React.ReactNode }) {
+                            }: React.HTMLAttributes<HTMLElement> & { inline?: boolean; children?: React.ReactNode }) {
                                 const match = /language-(\w+)/.exec(className || "");
                                 const code = String(children).trim();
                                 return !inline ? (
