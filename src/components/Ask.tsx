@@ -4,8 +4,6 @@ import remarkGfm from "remark-gfm"; // For GitHub-flavored markdown
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { materialLight } from "react-syntax-highlighter/dist/esm/styles/prism"; // Syntax highlighting style
 
-
-
 type ContentItem =
     | { type: "text"; text: string }
     // | { type: "image_url"; image_url: { url: string } };
@@ -27,9 +25,12 @@ const Ask = () => {
     const models = [
         { label: "Moonlight", value: "moonshotai/moonlight-16b-a3b-instruct:free" },
         { label: "DeepSeek R1", value: "deepseek/deepseek-r1:free" },
-        { label: "deepseek/deepseek-v3-base", value: "deepseek/deepseek-v3-base:free" }, // Add more models as needed
-        { label: "google/gemini-2.5(exp)", value: "google/gemini-2.5-pro-exp-03-25:free" }, // Add more models as needed
-        { label: "olympiccoder-32b", value: "open-r1/olympiccoder-32b:free" }, // Add more models as needed
+        { label: "rekaai/reka-flash-3", value: "rekaai/reka-flash-3:free" },
+        { label: "qwen2.5-vl-72b-instruct", value: "qwen/qwen2.5-vl-72b-instruct:free" }, // Add more models as needed
+        { label: "sophosympatheia/rogue-rose-103b-v0.2", value: "sophosympatheia/rogue-rose-103b-v0.2:free" }, // Add more models as needed
+        { label: "Meta-llama/llama-3.2-11b-vision-instruct", value: "meta-llama/llama-3.2-11b-vision-instruct:free" }, // Add more models as needed
+        { label: "meta-llama/llama-3.2-1b-instruct:free", value: "meta-llama/llama-3.2-1b-instruct:free" }, // Add more models as needed
+        { label: "nvidia/llama-3.1-nemotron-70b-instruct", value: "nvidia/llama-3.1-nemotron-70b-instruct:free" }, // Add more models as needed
     ];
 
     const [copiedCode, setCopiedCode] = useState<string | null>(null); // State to track copied code
@@ -81,6 +82,7 @@ const Ask = () => {
                     content: content,
                 },
             ];
+            
 
             const response = await fetch(apiurl, {
                 method: "POST",
@@ -95,6 +97,8 @@ const Ask = () => {
                     stream: true, // Enable streaming
                 }),
             });
+
+
 
             if (!response.ok) {
                 throw new Error(`API error: ${response.statusText}`);
@@ -161,19 +165,19 @@ const Ask = () => {
 
 
     return (
-        <div className="flex flex-col items-center bg-white">
+        <div className="flex flex-col items-center bg-gray-100">
             <h2 className="flex justify-center text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient-text mb-2 mt-0 p-4 rounded">
                 Ask Anything, Anytime!
             </h2>
-            <p className="text-gray-900 mb-4">Your AI-Powered Tutor and Knowledge Hub</p>
+            <p className="text-gray-900 mb-4">Let AI fuel your ‘what if’ moments.</p>
 
             {/* Model Selection */}
             {/* Dropdown for selecting the model */}
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-6 w-full max-w-6xl">
                 <select
                     value={selectedModel}
                     onChange={(e) => setSelectedModel(e.target.value)}
-                    className="p-2 border border-gray-300 rounded"
+                    className="p-2 border border-b-4 rounded-lg text-black"
                 >
                     {models.map((model) => (
                         <option key={model.value} value={model.value}>
@@ -187,7 +191,7 @@ const Ask = () => {
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Type your question here..."
-                className="text-2xl border border-gray-300 p-2 rounded mb-5 w-4/5 text-black"
+                className="text-2xl border bg-white border-gray-300 p-2 rounded mb-5 w-full max-w-6xl text-black"
                 rows={3} // Set the number of visible rows
             ></textarea>
 
@@ -227,7 +231,7 @@ const Ask = () => {
             </div>
             {/* New Response */}
             {responseMessage && (
-                <div className="mt-2 p-2 bg-gray-100 border border-gray-300 rounded w-4/5">
+                <div className="mt-2 p-2 bg-gray-100 border border-gray-300 rounded w-full max-w-6xl">
                     <h3 className="text-2xl font-bold mb-2">Response:</h3>
                     <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
@@ -271,7 +275,10 @@ const Ask = () => {
             )}
 
             {/* Chat History */}
-            <div className="mt-4 p-4 bg-gray-100 border border-gray-300 rounded w-4/5 h-100 overflow-y-auto">
+            <h3 className="text-2xl font-bold mb-2 mt-4">Chat History</h3>
+            {/* Display the chat history */}
+            <div className="mt-4 p-4 bg-white border border-gray-300 rounded w-full max-w-6xl h-100 overflow-y-auto">
+    
                 {[...history].reverse().map((item, index) => (
                     <div key={index} className="mb-4">
                         <p className="font-bold text-blue-600">Q: {item.question}</p>

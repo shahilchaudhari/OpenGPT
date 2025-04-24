@@ -14,10 +14,10 @@ function App() {
       {/* Navigation Tabs */}
       <nav className="flex flex-start text-[25px] xl ml-10 space-x-8 p-2.5 mb">
         <Link to="/ask" className="text-blue-500 hover:underline hover:text-blue-700">
-          Ask
+          Curio
         </Link>
         <Link to="/FaceOff" className="text-blue-500 hover:underline">
-          FaceOff
+          DialExa
         </Link>
         <Link to="/math" className="text-blue-500 hover:underline">
           Math
