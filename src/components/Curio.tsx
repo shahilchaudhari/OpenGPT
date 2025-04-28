@@ -13,7 +13,7 @@ type HistoryItem = {
     response: string;
 };
 
-const Ask = () => {
+const Curio = () => {
     const [question, setQuestion] = useState<string>(""); // State for the input
     const [responseMessage, setResponseMessage] = useState<string | null>(null); // State for API response
     const [loading, setLoading] = useState<boolean>(false);
@@ -247,7 +247,7 @@ const Ask = () => {
                                 return !inline ? (
                                     <div className="relative">
                                         <SyntaxHighlighter
-                                            style={materialLight as any }// Fix for the style prop
+                                            style={materialLight as any}// Fix for the style prop
                                             language={match?.[1] || "text"}
                                             PreTag="div"
                                             {...props}
@@ -294,4 +294,4 @@ const Ask = () => {
     );
 };
 
-export default Ask;
+export default Curio;

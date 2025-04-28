@@ -79,17 +79,19 @@ const responder = async (
   }
 };
 
-const FaceOff = () => {
+const DialExa = () => {
   const [llm1, setLlm1] = useState("moonshotai/moonlight-16b-a3b-instruct:free");
   const [llm2, setLlm2] = useState("deepseek/deepseek-r1:free");
   const [role1, setRole1] = useState("Theoretical Physicist");
   const [role2, setRole2] = useState("Experimental Physicist");
-  const [description1, setDescription1] = useState("A theoretical physicist specializing in string theory with extensive mathematical background. Has published numerous papers on multi-dimensional spacetime models and quantum gravity. Approaches physics primarily through mathematical models and theoretical frameworks.");
-  const [description2, setDescription2] = useState("An experimental physicist working at a major particle accelerator facility. Specializes in high-energy particle physics experiments and data analysis. Values empirical evidence and is focused on experimentally verifiable predictions. Has expertise in designing experiments to test theoretical models.");
-  const [scenario, setScenario] = useState("Two physicists discussing the testability of string theory. The Theoretical Physicist asks the Experimental Physicist about potential experimental evidence that could validate string theory in the coming decade.");
+  const [description1, setDescription1] = useState("A physicist specializing in theoretical frameworks, including general relativity and quantum mechanics. Explores the boundaries of physics and is open to speculative ideas like warp drives and wormholes.");
+  const [description2, setDescription2] = useState(" A physicist focused on experimental validation of physical theories. Works with particle accelerators and advanced instrumentation to test the limits of known physics. Skeptical of ideas that lack experimental evidence.");
+  const [initializationQuestion, setInitializationQuestion] = useState("What are your thoughts on the feasibility of faster-than-light travel, given current scientific understanding?");
+  const [scenario, setScenario] = useState("Two physicists are debating the feasibility of faster-than-light (FTL) travel. The Theoretical Physicist argues that FTL travel is theoretically possible under certain conditions, such as using a warp drive based on Einstein's equations. The Experimental Physicist counters that there is no experimental evidence to support such claims and that the energy requirements make it impractical. The discussion begins with the Theoretical Physicist asking the Experimental Physicist about their thoughts on the feasibility of FTL travel.");
   const [conversation, setConversation] = useState<ConversationEntry[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
 
   const handleFaceOff = async () => {
     setLoading(true);
@@ -111,23 +113,29 @@ const FaceOff = () => {
       setConversation(initialConversation);
 
       // Extract the first question or statement if possible
-      let initialPrompt = "What potential experimental evidence could validate string theory in the coming decade?";
-      const roleMatches = scenario.match(new RegExp(`${role1}\\s+(?:asks|says|inquires|questions)\\s+(.*?)(?:\\.|$)`, 'i'));
+      const roleMatches = scenario.match(
+        new RegExp(`${role1}\\s+(?:asks|says|inquires|questions)\\s+(.*?)(?:[.!?]|$)`, "i")
+      );
+
+      // Extract the first question or statement if possible
       if (roleMatches && roleMatches[1]) {
-        initialPrompt = roleMatches[1].trim();
+        let extractedQuestion = roleMatches[1].trim();
+
         // Add appropriate punctuation if missing
-        if (!initialPrompt.endsWith("?") && !initialPrompt.endsWith(".")) {
-          initialPrompt += "?";
+        if (!/[.!?]$/.test(extractedQuestion)) {
+          extractedQuestion += "?";
         }
+
+        // Update the initializationQuestion state
+        setInitializationQuestion(extractedQuestion);
       }
 
       // First message: Add first role's question/statement to the conversation
       const firstEntry: ConversationEntry = {
         speaker: role1,
-        message: initialPrompt,
-        role: "user"
+        message: initializationQuestion,
+        role: "user",
       };
-
       const updatedConversation = [...initialConversation, firstEntry];
       setConversation(updatedConversation);
 
@@ -213,13 +221,13 @@ const FaceOff = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Role 1 Configuration */}
           <div>
-            <h3 className="font-bold text-lg text-blue-800 mb-2">{role1}</h3>
+
             <div className="mb-4">
               <label className="block text-gray-700 font-medium mb-1">Select Model</label>
               <select
                 value={llm2}
                 onChange={(e) => setLlm2(e.target.value)}
-                className="p-2 border border-gray-300 rounded w-full"
+                className="p-2 border border-b-4 rounded w-full"
               >
                 {models.map((model) => (
                   <option key={model.value} value={model.value}>
@@ -244,20 +252,20 @@ const FaceOff = () => {
                 value={description1}
                 onChange={(e) => setDescription1(e.target.value)}
                 placeholder="Describe the role in detail..."
-                className="p-2 border border-gray-300 rounded w-full h-24 resize-y"
+                className="p-2 border border-gray-300 rounded w-full h-40 resize-y"
               ></textarea>
             </div>
           </div>
 
           {/* Role 2 Configuration */}
           <div>
-            <h3 className="font-bold text-lg text-green-800 mb-2">{role2}</h3>
+
             <div className="mb-4">
               <label className="block text-gray-700 font-medium mb-1">Select Model</label>
               <select
                 value={llm1}
                 onChange={(e) => setLlm1(e.target.value)}
-                className="p-2 border border-gray-300 rounded w-full"
+                className="p-2 border border-b-4 rounded w-full"
               >
                 {models.map((model) => (
                   <option key={model.value} value={model.value}>
@@ -282,10 +290,24 @@ const FaceOff = () => {
                 value={description2}
                 onChange={(e) => setDescription2(e.target.value)}
                 placeholder="Describe the role in detail..."
-                className="p-2 border border-gray-300 rounded w-full h-24 resize-y"
+                className="p-2 border border-gray-300 rounded w-full h-40 resize-y"
               ></textarea>
             </div>
           </div>
+        </div>
+
+        {/* Initialize Question */}
+        <div className="mt-6">
+          <label className="block text-gray-700 font-bold mb-2">Initial Question</label>
+          <textarea
+            value={initializationQuestion}
+            onChange={(e) => setInitializationQuestion(e.target.value)}
+            placeholder="Describe the scenario and initial interaction..."
+            className="p-3 border border-gray-300 rounded w-full h-32 resize-y"
+          ></textarea>
+          <p className="text-sm text-gray-500 mt-1">
+            Tip: "The {role1} asks {role2} this question..."
+          </p>
         </div>
 
         {/* Scenario Input */}
@@ -309,7 +331,7 @@ const FaceOff = () => {
             className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md font-medium transition-colors duration-200"
             disabled={loading}
           >
-            {loading ? "Generating Physics Discussion..." : "Start Discussion"}
+            {loading ? "Generating Discussion..." : "Start Discussion"}
           </button>
 
           {conversation.length > 0 && (
@@ -350,8 +372,8 @@ const FaceOff = () => {
                 <div
                   key={index}
                   className={`mb-6 p-4 rounded-lg ${isRole1
-                      ? "bg-blue-50 border-l-4 border-blue-600"
-                      : "bg-green-50 border-l-4 border-green-600"
+                    ? "bg-blue-50 border-l-4 border-blue-600"
+                    : "bg-green-50 border-l-4 border-green-600"
                     }`}
                 >
                   <div className={`font-bold mb-1 ${isRole1 ? "text-blue-800" : "text-green-800"}`}>
@@ -368,4 +390,4 @@ const FaceOff = () => {
   );
 };
 
-export default FaceOff;
+export default DialExa;
