@@ -3,12 +3,11 @@ import { useState } from "react";
 const models = [
   { label: "Moonlight", value: "moonshotai/moonlight-16b-a3b-instruct:free" },
   { label: "DeepSeek R1", value: "deepseek/deepseek-r1:free" },
-  { label: "rekaai/reka-flash-3", value: "rekaai/reka-flash-3:free" },
-  { label: "qwen2.5-vl-72b-instruct", value: "qwen/qwen2.5-vl-72b-instruct:free" },
-  { label: "sophosympatheia/rogue-rose-103b-v0.2", value: "sophosympatheia/rogue-rose-103b-v0.2:free" },
-  { label: "Meta-llama/llama-3.2-11b-vision-instruct", value: "meta-llama/llama-3.2-11b-vision-instruct:free" },
-  { label: "meta-llama/llama-3.2-1b-instruct:free", value: "meta-llama/llama-3.2-1b-instruct:free" },
-  { label: "nvidia/llama-3.1-nemotron-70b-instruct", value: "nvidia/llama-3.1-nemotron-70b-instruct:free" },
+  { label: "microsoft : phi-4-reasoning-plus", value: "microsoft/phi-4-reasoning-plus:free" },
+  { label: "qwen2.5-vl-72b-instruct", value: "qwen/qwen2.5-vl-72b-instruct:free" }, // Add more models as needed
+  { label: "Meta-llama/llama-3.2-11b-vision-instruct", value: "meta-llama/llama-3.2-11b-vision-instruct:free" }, // Add more models as needed
+  { label: "meta-llama/llama-3.2-1b-instruct:free", value: "meta-llama/llama-3.2-1b-instruct:free" }, // Add more models as needed
+
 ];
 
 type ConversationEntry = {

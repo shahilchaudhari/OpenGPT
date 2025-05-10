@@ -16,12 +16,7 @@ const MathWiz = () => {
   const models = [
     { label: "Moonlight", value: "moonshotai/moonlight-16b-a3b-instruct:free" },
     { label: "DeepSeek R1", value: "deepseek/deepseek-r1:free" },
-    { label: "Reka Flash 3", value: "rekaai/reka-flash-3:free" },
-    { label: "Qwen 2.5 VL", value: "qwen/qwen2.5-vl-72b-instruct:free" },
-    { label: "Rogue Rose", value: "sophosympatheia/rogue-rose-103b-v0.2:free" },
-    { label: "Llama 3.2 Vision", value: "meta-llama/llama-3.2-11b-vision-instruct:free" },
-    { label: "Llama 3.2 Instruct", value: "meta-llama/llama-3.2-1b-instruct:free" },
-    { label: "Nemotron 70B", value: "nvidia/llama-3.1-nemotron-70b-instruct:free" },
+    { label: "microsoft : phi-4-reasoning-plus", value: "microsoft/phi-4-reasoning-plus:free" },
   ];
 
   // Load MathJax script dynamically

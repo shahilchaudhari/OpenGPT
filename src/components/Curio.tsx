@@ -4,13 +4,15 @@ import remarkGfm from "remark-gfm"; // For GitHub-flavored markdown
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { materialLight } from "react-syntax-highlighter/dist/esm/styles/prism"; // Syntax highlighting style
 
+
 type ContentItem =
     | { type: "text"; text: string }
-    // | { type: "image_url"; image_url: { url: string } };
-
+    | { type: "image_url"; image_url: { url: string } };
+    
 type HistoryItem = {
     question: string;
     response: string;
+    imageUrl?: string;
 };
 
 const Curio = () => {
@@ -18,22 +20,46 @@ const Curio = () => {
     const [responseMessage, setResponseMessage] = useState<string | null>(null); // State for API response
     const [loading, setLoading] = useState<boolean>(false);
     const [history, setHistory] = useState<HistoryItem[]>([]); // State for conversation history
+    const [uploadedImage, setUploadedImage] = useState<string | null>(null); // State for uploaded image URL
+    const [copiedCode, setCopiedCode] = useState<string | null>(null); // State to track copied code
 
     // State for model selection
     const [selectedModel, setSelectedModel] = useState("moonshotai/moonlight-16b-a3b-instruct:free"); // Default model
 
     const models = [
-        { label: "Moonlight", value: "moonshotai/moonlight-16b-a3b-instruct:free" },
-        { label: "DeepSeek R1", value: "deepseek/deepseek-r1:free" },
-        { label: "rekaai/reka-flash-3", value: "rekaai/reka-flash-3:free" },
-        { label: "qwen2.5-vl-72b-instruct", value: "qwen/qwen2.5-vl-72b-instruct:free" }, // Add more models as needed
-        { label: "sophosympatheia/rogue-rose-103b-v0.2", value: "sophosympatheia/rogue-rose-103b-v0.2:free" }, // Add more models as needed
-        { label: "Meta-llama/llama-3.2-11b-vision-instruct", value: "meta-llama/llama-3.2-11b-vision-instruct:free" }, // Add more models as needed
-        { label: "meta-llama/llama-3.2-1b-instruct:free", value: "meta-llama/llama-3.2-1b-instruct:free" }, // Add more models as needed
-        { label: "nvidia/llama-3.1-nemotron-70b-instruct", value: "nvidia/llama-3.1-nemotron-70b-instruct:free" }, // Add more models as needed
+        { label: "Moonlight", value: "moonshotai/moonlight-16b-a3b-instruct:free", supportsImage: false },
+        { label: "DeepSeek R1", value: "deepseek/deepseek-r1:free", supportsImage: false },
+        { label: "microsoft : phi-4-reasoning-plus", value: "microsoft/phi-4-reasoning-plus:free", supportsImage: false },
+        { label: "qwen2.5-vl-72b-instruct", value: "qwen/qwen2.5-vl-72b-instruct:free", supportsImage: true },
+        { label: "Meta-llama/llama-3.2-11b-vision-instruct", value: "meta-llama/llama-3.2-11b-vision-instruct:free", supportsImage: false },
+        { label: "meta-llama/llama-3.2-1b-instruct:free", value: "meta-llama/llama-3.2-1b-instruct:free", supportsImage: false },
+        { label: "opengvlab : internvl3-14b", value: "opengvlab/internvl3-14b:free", supportsImage: true },
+        { label: "google/gemma-3-4b-it", value: "google/gemma-3-4b-it:free", supportsImage: true },
     ];
 
-    const [copiedCode, setCopiedCode] = useState<string | null>(null); // State to track copied code
+    const currentModelSupportsImage = () => {
+        const model = models.find(m => m.value === selectedModel);
+        return model ? model.supportsImage : false;
+    };
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Check if image is supported
+        if (!file.type.match('image.*')) {
+            alert('Please upload an image file (JPEG, PNG, etc.)');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            if (event.target?.result) {
+                setUploadedImage(event.target.result as string);
+            }
+        };
+        reader.readAsDataURL(file);
+    };
 
     const copyToClipboard = (code: string) => {
         navigator.clipboard.writeText(code);
@@ -41,11 +67,9 @@ const Curio = () => {
         setTimeout(() => setCopiedCode(null), 2000); // Reset the state after 2 seconds
     };
 
-
     const handleAsk = async () => {
         const apiKey = import.meta.env.VITE_API_KEY; // Ensure this is set in your .env.local file
         const apiurl = "https://openrouter.ai/api/v1/chat/completions";
-
 
         if (!apiKey) {
             console.error("API key is missing. Please set it in your .env.local file.");
@@ -53,8 +77,7 @@ const Curio = () => {
             return;
         }
 
-
-        if (!question.trim()) {
+        if (!question.trim() && !uploadedImage) {
             alert("Please enter a question or upload an image before asking.");
             return;
         }
@@ -62,12 +85,10 @@ const Curio = () => {
         setLoading(true); // Set loading to true when the request starts
         setResponseMessage(null); // Clear previous response
 
-
         try {
-
             const content: ContentItem[] = [];
 
-            // Add text question to the content
+            // Add text question to the content if it exists
             if (question.trim()) {
                 content.push({
                     type: "text",
@@ -75,14 +96,22 @@ const Curio = () => {
                 });
             }
 
+            // Add image to the content if it exists and model supports images
+            if (uploadedImage && currentModelSupportsImage()) {
+                content.push({
+                    type: "image_url",
+                    image_url: {
+                        url: uploadedImage
+                    }
+                });
+            }
 
             const messages = [
                 {
                     role: "user",
-                    content: content,
+                    content: content
                 },
             ];
-            
 
             const response = await fetch(apiurl, {
                 method: "POST",
@@ -91,14 +120,11 @@ const Curio = () => {
                     Authorization: `Bearer ${apiKey}`,
                 },
                 body: JSON.stringify({
-                    // model: "deepseek/deepseek-r1:free",
                     model: selectedModel,
                     messages: messages,
                     stream: true, // Enable streaming
                 }),
             });
-
-
 
             if (!response.ok) {
                 throw new Error(`API error: ${response.statusText}`);
@@ -141,7 +167,7 @@ const Curio = () => {
                                 const parsedChunk = JSON.parse(jsonChunk);
                                 const chunkText = parsedChunk.choices?.[0]?.delta?.content || ""; // Adjust based on API response
                                 fullResponse += chunkText; // Accumulate the response
-                                setResponseMessage((prev) => prev + chunkText); // Append the chunk to the existing response
+                                setResponseMessage((prev) => (prev || "") + chunkText); // Append the chunk to the existing response
                             } catch (err) {
                                 console.error("Failed to parse chunk:", jsonChunk, err);
                             }
@@ -151,37 +177,48 @@ const Curio = () => {
                     }
                 }
             }
-            // Append the question and response to the history
-            setHistory((prev) => [...prev, { question, response: fullResponse }]);
+
+            // Append the question, response, and image to the history
+            setHistory((prev) => [...prev, { 
+                question, 
+                response: fullResponse, 
+            }]);
 
         } catch (error) {
             console.error("Error during streaming:", error);
-            setResponseMessage("An error occurred while while processing the response.");
+            setResponseMessage("An error occurred while processing the response.");
         } finally {
             setLoading(false);
         }
     };
 
-
+    const clearImage = () => {
+        setUploadedImage(null);
+    };
 
     return (
         <div className="flex flex-col items-center bg-gray-100">
             <h2 className="flex justify-center text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 animate-gradient-text mb-2 mt-0 p-4 rounded">
                 Ask Anything, Anytime!
             </h2>
-            <p className="text-gray-900 mb-4">Let AI fuel your ‘what if’ moments.</p>
+            <p className="text-gray-900 mb-4">Let AI fuel your 'what if' moments.</p>
 
             {/* Model Selection */}
-            {/* Dropdown for selecting the model */}
             <div className="flex justify-center mb-6 w-full max-w-6xl">
                 <select
                     value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
+                    onChange={(e) => {
+                        setSelectedModel(e.target.value);
+                        // Clear image when switching models if new model doesn't support images
+                        if (!models.find(m => m.value === e.target.value)?.supportsImage) {
+                            setUploadedImage(null);
+                        }
+                    }}
                     className="p-2 border border-b-4 rounded-lg text-black"
                 >
                     {models.map((model) => (
                         <option key={model.value} value={model.value}>
-                            {model.label}
+                            {model.label} {model.supportsImage ? "(Input Images)" : ""}
                         </option>
                     ))}
                 </select>
@@ -192,44 +229,75 @@ const Curio = () => {
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Type your question here..."
                 className="text-2xl border bg-white border-gray-300 p-2 rounded mb-5 w-full max-w-6xl text-black"
-                rows={3} // Set the number of visible rows
+                rows={3}
             ></textarea>
 
-            <div className="flex flex-row space-x-4 mb-4">
+            {/* Image Upload Section */}
+            {currentModelSupportsImage() && (
+                <div className="mb-4 w-full max-w-6xl">
+                    <div className="flex items-center space-x-4">
+                        <label className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 cursor-pointer">
+                            Upload Image
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={handleImageUpload} 
+                                className="hidden" 
+                            />
+                        </label>
+                        {uploadedImage && (
+                            <>
+                                <div className="relative">
+                                    <img 
+                                        src={uploadedImage} 
+                                        alt="Uploaded preview" 
+                                        className="h-20 w-20 object-cover rounded"
+                                    />
+                                </div>
+                                <button 
+                                    onClick={clearImage}
+                                    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                                >
+                                    Remove
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
 
+            <div className="flex flex-row space-x-4 mb-4">
                 <button
                     onClick={handleAsk}
                     className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                    disabled={loading} // Disable the button while loading
+                    disabled={loading}
                 >
-                    {loading ? "Loading..." : "Ask"} {/* Show "Loading..." while waiting */}
+                    {loading ? "Loading..." : "Ask"}
                 </button>
 
-                {/* Abort Search Button */}
                 <button
                     onClick={() => {
-                        setLoading(false); // Stop loading
-                        setResponseMessage(null); // Clear the response
-                        // setQuestion(""); // Clear the input field
+                        setLoading(false);
+                        setResponseMessage(null);
                     }}
                     className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
                 >
                     Abort
                 </button>
 
-                {/* New Chat Button */}
                 <button
                     onClick={() => {
-                        setHistory([]); // Clear the chat history
-                        setResponseMessage(null); // Clear the response
-                        setQuestion(""); // Clear the input field
+                        setHistory([]);
+                        setResponseMessage(null);
+                        setQuestion("");
+                        setUploadedImage(null);
                     }}
                     className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
                 >
                     New Chat
                 </button>
             </div>
-            {/* New Response */}
+
             {responseMessage && (
                 <div className="mt-2 p-2 bg-gray-100 border border-gray-300 rounded w-full max-w-6xl">
                     <h3 className="text-2xl font-bold mb-2">Response:</h3>
@@ -247,7 +315,7 @@ const Curio = () => {
                                 return !inline ? (
                                     <div className="relative">
                                         <SyntaxHighlighter
-                                            style={materialLight as any}// Fix for the style prop
+                                            style={materialLight as any}
                                             language={match?.[1] || "text"}
                                             PreTag="div"
                                             {...props}
@@ -276,12 +344,19 @@ const Curio = () => {
 
             {/* Chat History */}
             <h3 className="text-2xl font-bold mb-2 mt-4">Chat History</h3>
-            {/* Display the chat history */}
             <div className="mt-4 p-4 bg-white border border-gray-300 rounded w-full max-w-6xl h-100 overflow-y-auto">
-    
                 {[...history].reverse().map((item, index) => (
                     <div key={index} className="mb-4">
                         <p className="font-bold text-blue-600">Q: {item.question}</p>
+                        {item.imageUrl && (
+                            <div className="my-2">
+                                <img 
+                                    src={item.imageUrl} 
+                                    alt="Question context" 
+                                    className="max-h-40 rounded"
+                                />
+                            </div>
+                        )}
                         <div className="text-gray-800">
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                 {item.response}
@@ -290,7 +365,7 @@ const Curio = () => {
                     </div>
                 ))}
             </div>
-        </div >
+        </div>
     );
 };
 
